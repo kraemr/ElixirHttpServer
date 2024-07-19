@@ -1,28 +1,35 @@
 defmodule HTTPFileServer do
   require HTTPResponse
-
   @supported_filetypes %{
     "webp" =>   "image/webp",
     "png"  =>   "image/png",
     "jpeg" =>   "image/jpeg",
     "jpg"  =>   "image/jpeg",
-    "ico" => "image/x-icon",
+    "ico"  =>   "image/x-icon",
     "css"  =>   "text/css",
     "txt"  =>   "text/text",
     "html" =>   "text/html",
     "js"   =>   "application/javascript",
-    "woff2" =>   "application/octet-stream",
+    "json" =>   "application/json; charset=UTF-8",
+    "xml" =>   "application/xml; charset=UTF-8",
+    "woff2"=>   "application/octet-stream",
     "woff" =>   "application/octet-stream"
   }
+
+
+  def get_content_type(file_ending) do
+    Map.get(@supported_filetypes,file_ending)
+  end
 
   def detect_content_type(file_name) do
     arr = String.split(file_name,".")
     length = Enum.count(arr)
     # if length = 0 error
     if length > 0 do
-      Enum.at(arr,length-1)
+      type = Enum.at(arr,length-1)
+      Map.get(@supported_filetypes,type)
     else
-      "text/html"
+      "text/text"
     end
 
   end
