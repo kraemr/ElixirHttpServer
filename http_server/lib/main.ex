@@ -1,24 +1,25 @@
 
+
 # Supervision tree
 defmodule HttpServerSupervisor do
    use Supervisor
-
    def start_link(_) do
      Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
    end
-
    def init(:ok) do
      children = [
        {HttpServer, []}
      ]
-
      Supervisor.init(children, strategy: :one_for_one)
    end
  end
 
-
+# Connecting with a telnet client doesnt work?
+# Curl works
+# Accessing with webbrowser works
 defmodule HttpServer do
    require Logger
+   require HTTPResponse
    use GenServer
    @port 8081
 #    {:ok, socket} = :gen_tcp.listen(@port, [:binary, packet: :raw, active: false, reuseaddr: true])
@@ -44,9 +45,12 @@ defmodule HttpServer do
    end
 
    def handle_info({:tcp, socket, data}, state) do
-      Logger.info "Received \n#{data}"
+     # Logger.info "Received \n#{data}"
       Logger.info "Sending it back"
-      :ok = :gen_tcp.send(socket, data)
+      response = HTTPResponse.create("HTTP/1.1","200 OK","Hello World")
+      Logger.info "#{response}"
+      :ok = :gen_tcp.send(socket, response)
+      :gen_tcp.close(socket)  # Properly close the socket
       {:noreply, state}
    end
 
