@@ -14,18 +14,17 @@ defmodule HttpServerSupervisor do
    end
  end
 
-# Connecting with a telnet client doesnt work?
-# Curl works
-# Accessing with webbrowser works
 defmodule HttpServer do
    require Logger
    require HTTPResponse
+   require HTTPRequestParser
    use GenServer
-   @port 8081
-#    {:ok, socket} = :gen_tcp.listen(@port, [:binary, packet: :raw, active: false, reuseaddr: true])
+   @port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
+   @root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
+
    def start_link(_) do
       GenServer.start_link(__MODULE__, %{socket: nil}, name: __MODULE__)
-    end
+   end
 
    def init(state) do
       {:ok, socket} = :gen_tcp.listen(@port, [:binary, active: false, packet: :raw, reuseaddr: true])
@@ -37,18 +36,56 @@ defmodule HttpServer do
 
    def handle_info(:accept, %{socket: socket} = state) do
       {:ok, client} = :gen_tcp.accept(socket)
-      Logger.info("Client connected")
+      #Logger.info("Client connected")
       :gen_tcp.controlling_process(client, self())
       :inet.setopts(client, active: :once)  # Set the socket to active mode for one messagE
       send(self(), :accept)
       {:noreply, state}
    end
 
+   #Respond to received Http Data
    def handle_info({:tcp, socket, data}, state) do
-     # Logger.info "Received \n#{data}"
-      Logger.info "Sending it back"
+      # trim out all the other lines to not pass around the entire buffer everytime
+      # as we only want to know what kind of request this is
+      first_line = data |> String.split("\r\n") |> List.first()
+      result = case HTTPRequestParser.extract_method(first_line) do
+         {:ok, method} ->
+            IO.puts("Method: #{method}")
+         {:error, reason} ->
+            IO.puts("Failed to read Method: #{reason}")
+      end
+      method = case result do
+         {:ok, method} -> method
+         {:error, _reason} -> nil
+      end
+
+      result = case HTTPRequestParser.extract_version(first_line) do
+         {:ok, version} ->
+            IO.puts("Version: #{version}")
+         {:error, reason} ->
+            IO.puts("Failed to read Version: #{reason}")
+      end
+
+      version = case result do
+         {:ok, version} -> version
+         {:error, _reason} -> nil
+      end
+
+      result = case HTTPRequestParser.extract_path(first_line) do
+         {:ok, path} ->
+            IO.puts("Path: #{path}")
+         {:error, reason} ->
+            IO.puts("Failed to read path: #{reason}")
+      end
+
+      path = case result do
+         {:ok, path} -> path
+         {:error, _reason} -> nil
+      end
+
+
       response = HTTPResponse.create("HTTP/1.1","200 OK","Hello World")
-      Logger.info "#{response}"
+
       :ok = :gen_tcp.send(socket, response)
       :gen_tcp.close(socket)  # Properly close the socket
       {:noreply, state}
