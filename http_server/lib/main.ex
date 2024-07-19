@@ -24,6 +24,7 @@ defmodule HttpServer do
    @port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
    @root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
 
+
    def start_link(_) do
       GenServer.start_link(__MODULE__, %{socket: nil}, name: __MODULE__)
    end
@@ -31,8 +32,7 @@ defmodule HttpServer do
    def init(state) do
       {:ok, socket} = :gen_tcp.listen(@port, [:binary, active: false, packet: :raw, reuseaddr: true])
       send(self(), :accept)
-
-      Logger.info "Accepting connection on port #{@port}..."
+      Logger.info "Accepting connections on port #{@port}..."
       {:ok, %{state | socket: socket}}
    end
 
@@ -50,45 +50,29 @@ defmodule HttpServer do
       # trim out all the other lines to not pass around the entire buffer everytime
       # as we only want to know what kind of request this is
       first_line = data |> String.split("\r\n") |> List.first()
-      result = case HTTPRequestParser.extract_method(first_line) do
-         {:ok, method} -> {:ok, method}
-         {:error, reason} -> {:error, reason}
-      end
 
-      method = case result do
+      method = case HTTPRequestParser.extract_method(first_line) do
          {:ok, method} -> method
-         {:error, _reason} -> nil
+         {:error, reason} -> nil
       end
 
-      result = case HTTPRequestParser.extract_version(first_line) do
-         {:ok, version} -> {:ok, version}
-         {:error, reason} -> {:error, reason}
-      end
-
-      version = case result do
+      version = case HTTPRequestParser.extract_version(first_line) do
          {:ok, version} -> version
-         {:error, _reason} -> nil
+         {:error, reason} -> nil
       end
 
-      result = case HTTPRequestParser.extract_path(first_line) do
-         {:ok, path} -> {:ok, path}
-         {:error, reason} -> {:error, reason}
-      end
-
-      path = case result do
+      path = case HTTPRequestParser.extract_path(first_line) do
          {:ok, path} -> path
-         {:error, _reason} -> nil
+         {:error, reason} -> nil
       end
 
       if path != nil do
-         #path = String.replace_leading(path, "/", "")
-         #IO.puts("serving file: #{path}")
          response = HTTPFileServer.serve_file_contents(@root_dir,path)
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)  # Properly close the socket
          {:noreply, state}
       else
-         response = HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found")
+         response = HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found","text/html")
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)  # Properly close the socket
          {:noreply, state}
