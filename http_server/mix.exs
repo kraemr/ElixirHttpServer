@@ -21,6 +21,7 @@ defmodule HttpServerApp.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+	{:json, "~> 1.4"},
     ]
   end
 end
