@@ -34,6 +34,7 @@ defmodule HTTPFileServer do
 
   def serve_file_contents(root_dir, file_name) do
     path = root_dir <> file_name
+    IO.puts("reading file #{path}")
     response = case File.read(path) do
       {:ok, contents} ->
         HTTPResponse.create("HTTP/1.1","200 OK",contents,detect_content_type(file_name))

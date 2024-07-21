@@ -1,9 +1,10 @@
 defmodule TestApp do
   use Application
-  require HttpServerApp
+  require HttpServerSupervisor
   require HTTPResponse
   require Logger
   require JSON
+
   # every callback functions needs the request param
   # request contains all the request data
   # path,Method,Version,Body,Headers ...
@@ -23,11 +24,10 @@ defmodule TestApp do
         HTTPResponse.create("HTTP/1.1","200 OK", response_data ,"application/json")
       end
     end
-
     routes = %{
       "/api/test" => json_api,
     }
-    HttpServerApp.start(routes)
+    HttpServerSupervisor.start_link(routes)
   end
 
 end

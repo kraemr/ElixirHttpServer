@@ -1,7 +1,13 @@
 defmodule HTTPRequestParser do
   @valid_methods ["GET","POST","PUT","DELETE"]
-  @valid_versions ["HTTP/1.0","HTTP/1.1","HTTP/2","HTTP/3"]
-  # Look for \r\n followed directly by another \r\n
+  @valid_versions ["HTTP/1.0","HTTP/1.1","HTTP/2"]   # HTTP/2 will be implemented, HTTP/3 not for now
+
+
+  def extract_headers(request_data) do
+
+  end
+
+  # Looks for \r\n followed directly by another \r\n
   # At the start of that is body till another \r\n
   def extract_body_data(request_data) do
     arr = String.split(request_data,"\r\n\r\n")
@@ -12,7 +18,6 @@ defmodule HTTPRequestParser do
     end
   end
 
-  #todo add error handling
   def extract_method(request_data) do
     arr = String.split(request_data, " ")
     if Enum.member?(@valid_methods, Enum.at(arr, 0)) do
@@ -35,14 +40,13 @@ defmodule HTTPRequestParser do
     end
   end
 
-
   #todo add error handling
   def extract_version(request_data) do
     arr = String.split(request_data, " ")
     if Enum.member?(@valid_versions, Enum.at(arr, 2)) do
       {:ok, Enum.at(arr, 2) }
     else
-      {:error, "Invalid Data"}
+      {:error, "Invalid Version"}
     end
   end
 end

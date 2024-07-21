@@ -1,35 +1,12 @@
-
-
-# Supervision tree
-defmodule HttpServerSupervisor do
-   use Supervisor
-   def start_link(routes) do
-     Supervisor.start_link(__MODULE__, routes ,name: __MODULE__)
-   end
-   def init(routes) do
-      children = [
-         %{
-           id: HttpServer,
-           start: {HttpServer, :start_link, [routes]},
-           restart: :permanent,
-           shutdown: 5000,
-           type: :worker,
-           modules: [HttpServer]
-         }
-       ]
-     Supervisor.init(children, strategy: :one_for_one)
-   end
- end
-
 defmodule HttpServer do
    require Logger
    require HTTPResponse
    require HTTPRequestParser
    require HTTPFileServer
    use GenServer
+
    @port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
    @root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
-
 
    def start_link(routes) do
       GenServer.start_link(__MODULE__, %{socket: nil,routes: routes}, name: __MODULE__)
@@ -60,12 +37,10 @@ defmodule HttpServer do
          {:ok, method} -> method
          {:error, reason} -> nil
       end
-
       version = case HTTPRequestParser.extract_version(first_line) do
          {:ok, version} -> version
          {:error, reason} -> nil
       end
-
       {path , params} = case HTTPRequestParser.extract_path_and_params(first_line) do
          {:ok, path, params} -> {path, params}
          {:invalid_get} -> {nil,nil}
@@ -95,12 +70,3 @@ defmodule HttpServer do
       {:noreply, state}
    end
 end
-
-
-# User facing API to use
-# Just supply API Routes with your callback functions and it just works!
-defmodule HttpServerApp do
-   def start(routes) do
-      HttpServerSupervisor.start_link(routes)
-   end
- end
