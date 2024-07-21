@@ -4,16 +4,12 @@ defmodule TestApp do
   require HTTPResponse
   require Logger
   require JSON
-
-
-
-
-  # every callback functions needs request param
+  # every callback functions needs the request param
   # request contains all the request data
-  # path,Method,Version,Body,Header ...
+  # path,Method,Version,Body,Headers ...
   # When you are done just do HTTPResponse.create() with your data
+  # There is no "MiddleWare" you implement your checks inside the function and just use em
   def start(_type,_args) do
-
     json_api = fn(request) ->
       Logger.info(request)
       test = %{hello: "world"}

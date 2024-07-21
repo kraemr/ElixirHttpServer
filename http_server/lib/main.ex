@@ -66,16 +66,14 @@ defmodule HttpServer do
          {:error, reason} -> nil
       end
 
-      path = case HTTPRequestParser.extract_path(first_line) do
-         {:ok, path} -> path
-         {:error, reason} -> nil
+      {path , params} = case HTTPRequestParser.extract_path_and_params(first_line) do
+         {:ok, path, params} -> {path, params}
+         {:invalid_get} -> {nil,nil}
       end
 
       if path && Map.has_key?(routes, path) do
          function = Map.get(routes, path)
-
-         response = function.(%{path: path, method: method, version: version, body: body})
-
+         response = function.(%{path: path, params: params, method: method, version: version, body: body})
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)
          {:noreply, state}
