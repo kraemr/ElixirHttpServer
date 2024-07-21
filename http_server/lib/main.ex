@@ -26,7 +26,6 @@ defmodule HttpServer do
    require HTTPResponse
    require HTTPRequestParser
    require HTTPFileServer
-
    use GenServer
    @port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
    @root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
@@ -45,7 +44,6 @@ defmodule HttpServer do
 
    def handle_info(:accept, %{socket: socket} = state) do
       {:ok, client} = :gen_tcp.accept(socket)
-      #Logger.info("Client connected")
       :gen_tcp.controlling_process(client, self())
       :inet.setopts(client, active: :once)  # Set the socket to active mode for one messagE
       send(self(), :accept)
@@ -57,7 +55,7 @@ defmodule HttpServer do
       # trim out all the other lines to not pass around the entire buffer everytime
       # as we only want to know what kind of request this is
       first_line = data |> String.split("\r\n") |> List.first()
-
+      body = HTTPRequestParser.extract_body_data(data)
       method = case HTTPRequestParser.extract_method(first_line) do
          {:ok, method} -> method
          {:error, reason} -> nil
@@ -72,9 +70,12 @@ defmodule HttpServer do
          {:ok, path} -> path
          {:error, reason} -> nil
       end
+
       if path && Map.has_key?(routes, path) do
          function = Map.get(routes, path)
-         response = function.()
+
+         response = function.(%{path: path, method: method, version: version, body: body})
+
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)
          {:noreply, state}
@@ -98,9 +99,9 @@ defmodule HttpServer do
 end
 
 
-# Start the application
+# User facing API to use
+# Just supply API Routes with your callback functions and it just works!
 defmodule HttpServerApp do
-
    def start(routes) do
       HttpServerSupervisor.start_link(routes)
    end
