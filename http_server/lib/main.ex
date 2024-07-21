@@ -3,13 +3,20 @@
 # Supervision tree
 defmodule HttpServerSupervisor do
    use Supervisor
-   def start_link(_) do
-     Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
+   def start_link(routes) do
+     Supervisor.start_link(__MODULE__, routes ,name: __MODULE__)
    end
-   def init(:ok) do
-     children = [
-       {HttpServer, []}
-     ]
+   def init(routes) do
+      children = [
+         %{
+           id: HttpServer,
+           start: {HttpServer, :start_link, [routes]},
+           restart: :permanent,
+           shutdown: 5000,
+           type: :worker,
+           modules: [HttpServer]
+         }
+       ]
      Supervisor.init(children, strategy: :one_for_one)
    end
  end
@@ -25,8 +32,8 @@ defmodule HttpServer do
    @root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
 
 
-   def start_link(_) do
-      GenServer.start_link(__MODULE__, %{socket: nil}, name: __MODULE__)
+   def start_link(routes) do
+      GenServer.start_link(__MODULE__, %{socket: nil,routes: routes}, name: __MODULE__)
    end
 
    def init(state) do
@@ -46,7 +53,7 @@ defmodule HttpServer do
    end
 
    #Respond to received Http Data
-   def handle_info({:tcp, socket, data}, state) do
+   def handle_info({:tcp, socket, data}, %{routes: routes} = state) do
       # trim out all the other lines to not pass around the entire buffer everytime
       # as we only want to know what kind of request this is
       first_line = data |> String.split("\r\n") |> List.first()
@@ -65,14 +72,14 @@ defmodule HttpServer do
          {:ok, path} -> path
          {:error, reason} -> nil
       end
-
-      if path != nil do
-         response = HTTPFileServer.serve_file_contents(@root_dir,path)
+      if path && Map.has_key?(routes, path) do
+         function = Map.get(routes, path)
+         response = function.()
          :ok = :gen_tcp.send(socket, response)
-         :gen_tcp.close(socket)  # Properly close the socket
+         :gen_tcp.close(socket)
          {:noreply, state}
       else
-         response = HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found","text/html")
+         response = HTTPFileServer.serve_file_contents(@root_dir,path)
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)  # Properly close the socket
          {:noreply, state}
@@ -93,9 +100,8 @@ end
 
 # Start the application
 defmodule HttpServerApp do
-   use Application
 
-   def start(_type, _args) do
-     HttpServerSupervisor.start_link([])
+   def start(routes) do
+      HttpServerSupervisor.start_link(routes)
    end
  end

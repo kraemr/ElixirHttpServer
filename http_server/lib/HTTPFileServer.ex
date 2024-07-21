@@ -1,5 +1,6 @@
 defmodule HTTPFileServer do
   require HTTPResponse
+
   @supported_filetypes %{
     "webp" =>   "image/webp",
     "png"  =>   "image/png",
@@ -16,7 +17,6 @@ defmodule HTTPFileServer do
     "woff" =>   "application/octet-stream"
   }
 
-
   def get_content_type(file_ending) do
     Map.get(@supported_filetypes,file_ending)
   end
@@ -24,14 +24,12 @@ defmodule HTTPFileServer do
   def detect_content_type(file_name) do
     arr = String.split(file_name,".")
     length = Enum.count(arr)
-    # if length = 0 error
     if length > 0 do
       type = Enum.at(arr,length-1)
-      Map.get(@supported_filetypes,type)
+      get_content_type(type)
     else
       "text/text"
     end
-
   end
 
   def serve_file_contents(root_dir, file_name) do
