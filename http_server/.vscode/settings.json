@@ -1,0 +1,4 @@
+{
+  "elixirLS.autoBuild": true,
+  "elixirLS.autoInsertRequiredAlias": false
+}
