@@ -1,6 +1,6 @@
 defmodule TestApp do
   use Application
-  require HttpServerSupervisor
+  require HTTPServerSupervisor
   require HTTPResponse
   require Logger
   require JSON
@@ -27,7 +27,7 @@ defmodule TestApp do
     routes = %{
       "/api/test" => json_api,
     }
-    HttpServerSupervisor.start_link(routes)
+    HTTPServerSupervisor.start_link(routes)
   end
 
 end

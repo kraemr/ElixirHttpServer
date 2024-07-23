@@ -1,4 +1,4 @@
-defmodule HttpServer do
+defmodule HTTPServer do
    require Logger
    require HTTPResponse
    require HTTPRequestParser

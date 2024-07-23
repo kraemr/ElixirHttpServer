@@ -1,7 +1,6 @@
 defmodule HTTPFileServer do
   require HTTPResponse
   require HTTPSanitizer
-
   @supported_filetypes %{
     "aac"   => "audio/aac",
     "abw"   => "application/x-abiword",
@@ -92,7 +91,7 @@ defmodule HTTPFileServer do
     if length > 0 do
       type = Enum.at(arr,length-1)
       get_content_type(type)
-    else
+    else #no file extension
       "text/plain"
     end
   end
@@ -102,10 +101,15 @@ defmodule HTTPFileServer do
     IO.puts("reading file #{path}")
     response = case File.read(path) do
       {:ok, contents} ->
-        HTTPResponse.create("HTTP/1.1","200 OK",contents,detect_content_type(file_name))
-      {:error, :enoent} ->
+        type = detect_content_type(file_name)
+        if type == nil do #invalid content type or doesnt exist
+          HTTPResponse.create("HTTP/1.1","400 Bad Request","Bad Request","text/html")
+        else
+          HTTPResponse.create("HTTP/1.1","200 OK",contents,type)
+        end
+      {:error, :enoent} -> # File doesnt exist
         HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found","text/html")
-      {:error, :eisdir} ->
+      {:error, :eisdir} -> # dont list directories
         HTTPResponse.create("HTTP/1.1","400 Bad Request","Bad Request","text/html")
     end
     response
