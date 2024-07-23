@@ -98,19 +98,22 @@ defmodule HTTPFileServer do
 
   def serve_file_contents(root_dir, file_name) do
     path = root_dir <> HTTPSanitizer.sanitize_path(file_name)
+#    path = root_dir <> file_name
     IO.puts("reading file #{path}")
     response = case File.read(path) do
       {:ok, contents} ->
         type = detect_content_type(file_name)
         if type == nil do #invalid content type or doesnt exist
-          HTTPResponse.create("HTTP/1.1","400 Bad Request","Bad Request","text/html")
+          HTTPResponse.create("HTTP/1.1","200 OK",contents,"text/plain")
         else
           HTTPResponse.create("HTTP/1.1","200 OK",contents,type)
         end
       {:error, :enoent} -> # File doesnt exist
         HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found","text/html")
       {:error, :eisdir} -> # dont list directories
-        HTTPResponse.create("HTTP/1.1","400 Bad Request","Bad Request","text/html")
+        HTTPResponse.create("HTTP/1.1","400 Bad Request","Bad Request, Directory Listing Disabled","text/html")
+      {:error, :enametoolong} -> 
+        HTTPResponse.create("HTTP/1.1","500 Internal Server Error","Internal Server Error","text/html")
     end
     response
   end

@@ -50,7 +50,7 @@ defmodule HTTPServer do
 
       {path , params} = case HTTPRequestParser.extract_path_and_params(first_line) do
          {:ok, path, params} -> {path, params}
-         {:invalid_get} -> {nil,nil}
+         {:invalid_get,nil,nil} -> {nil,nil}
       end
 
       # if path is not nil and the route exists, then execute the callback function specified
