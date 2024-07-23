@@ -10,7 +10,7 @@ defmodule HTTPRequestParser do
     val = Enum.at(kv,1)
     val = String.replace(val," ","")
     map = Map.put(header_map,key,val)
-    IO.puts("key:#{key},value:#{val}")
+    #IO.puts("key:#{key},value:#{val}")
     loop_header(header_list,map,n-1)
   end
 
@@ -20,7 +20,7 @@ defmodule HTTPRequestParser do
       key = Enum.at(kv,0)
       val = Enum.at(kv,1)
       val = String.replace(val," ","")
-      IO.puts("key:#{key},value:#{val}")
+      #IO.puts("key:#{key},value:#{val}")
       Map.put(header_map,key,val)
   end
 
@@ -60,8 +60,6 @@ defmodule HTTPRequestParser do
     splits = String.split(path_and_params, "?")
     if length(splits) > 2 do
       {:invalid_get,nil,nil}
-    #else if length(splits) == 0
-      #{:invalid_get,nil,nil}
     else
       {:ok, Enum.at(splits,0),Enum.at(splits,1)}
     end

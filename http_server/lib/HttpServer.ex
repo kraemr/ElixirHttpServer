@@ -29,10 +29,13 @@ defmodule HttpServer do
 
    #Respond to received Http Data
    def handle_info({:tcp, socket, data}, %{routes: routes} = state) do
+
       # trim out all the other lines to not pass around the entire buffer everytime
       # as we only want to know what kind of request this is
       first_line = data |> String.split("\r\n") |> List.first()
       body = HTTPRequestParser.extract_body_data(data)
+
+      # extract_headers takes in data WITHOUT the first line, this is achieved by replacing the first line
       headers = HTTPRequestParser.extract_headers(String.replace(data,first_line <> "\r\n",""))
 
       method = case HTTPRequestParser.extract_method(first_line) do
@@ -50,16 +53,17 @@ defmodule HttpServer do
          {:invalid_get} -> {nil,nil}
       end
 
+      # if path is not nil and the route exists, then execute the callback function specified
       if path && Map.has_key?(routes, path) do
          function = Map.get(routes, path)
          response = function.(%{path: path, params: params, method: method, version: version, body: body,headers: headers})
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)
          {:noreply, state}
-      else
+      else # else we try sending the file
          response = HTTPFileServer.serve_file_contents(@root_dir,path)
          :ok = :gen_tcp.send(socket, response)
-         :gen_tcp.close(socket)  # Properly close the socket
+         :gen_tcp.close(socket)
          {:noreply, state}
       end
    end
