@@ -112,7 +112,7 @@ defmodule HTTPFileServer do
         HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found","text/html")
       {:error, :eisdir} -> # dont list directories
         HTTPResponse.create("HTTP/1.1","400 Bad Request","Bad Request, Directory Listing Disabled","text/html")
-      {:error, :enametoolong} -> 
+      {:error, :enametoolong} ->
         HTTPResponse.create("HTTP/1.1","500 Internal Server Error","Internal Server Error","text/html")
     end
     response
