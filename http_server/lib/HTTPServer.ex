@@ -5,17 +5,18 @@ defmodule HTTPServer do
    require HTTPFileServer
    use GenServer
 
-   @port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
-   @root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
+   #@port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
+   #@root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
 
-   def start_link(routes) do
-      GenServer.start_link(__MODULE__, %{socket: nil,routes: routes}, name: __MODULE__)
+   def start_link(init_obj) do
+      init_obj = Map.put(init_obj,:socket,nil)
+      GenServer.start_link(__MODULE__, init_obj, name: __MODULE__)
    end
 
-   def init(state) do
-      {:ok, socket} = :gen_tcp.listen(@port, [:binary, active: false, packet: :raw, reuseaddr: true])
+   def init(%{port: port} = state) do
+      {:ok, socket} = :gen_tcp.listen(port, [:binary, active: false, packet: :raw, reuseaddr: true])
       send(self(), :accept)
-      Logger.info "Accepting connections on port #{@port}..."
+      Logger.info "Accepting connections on port #{port}..."
       {:ok, %{state | socket: socket}}
    end
 
@@ -28,7 +29,7 @@ defmodule HTTPServer do
    end
 
    #Respond to received Http Data
-   def handle_info({:tcp, socket, data}, %{routes: routes} = state) do
+   def handle_info({:tcp, socket, data}, %{routes: routes,root_dir: root_dir} = state) do
 
       # trim out all the other lines to not pass around the entire buffer everytime
       # as we only want to know what kind of request this is
@@ -61,7 +62,7 @@ defmodule HTTPServer do
          :gen_tcp.close(socket)
          {:noreply, state}
       else # else we try sending the file
-         response = HTTPFileServer.serve_file_contents(@root_dir,path)
+         response = HTTPFileServer.serve_file_contents(root_dir,path)
          :ok = :gen_tcp.send(socket, response)
          :gen_tcp.close(socket)
          {:noreply, state}

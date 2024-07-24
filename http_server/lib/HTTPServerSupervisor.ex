@@ -2,14 +2,16 @@
 defmodule HTTPServerSupervisor do
   use Supervisor
   require HTTPServer
-  def start_link(routes) do
-    Supervisor.start_link(__MODULE__, routes ,name: __MODULE__)
+
+  def start_link(routes,root_dir,port) do
+    Supervisor.start_link(__MODULE__, %{routes: routes,root_dir: root_dir,port: port} ,name: __MODULE__)
   end
-  def init(routes) do
+
+  def init(init_obj) do
      children = [
         %{
           id: HTTPServer,
-          start: {HTTPServer, :start_link, [routes]},
+          start: {HTTPServer, :start_link, [init_obj]},
           restart: :permanent,
           shutdown: 5000,
           type: :worker,
