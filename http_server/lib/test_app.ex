@@ -30,7 +30,7 @@ defmodule TestApp do
     routes = %{
       "/api/test" => json_api, # register callback for route /api/test -> This function is used to generate responses for /api/test
     }
-    HTTPServerSupervisor.start_link(routes,"../public",8080)
+    HTTPServerSupervisor.start_link(routes,"../public",8082)
   end
 
 end

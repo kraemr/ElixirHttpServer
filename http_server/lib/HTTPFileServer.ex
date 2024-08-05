@@ -96,9 +96,12 @@ defmodule HTTPFileServer do
     end
   end
 
+  def serve_file_contents(root_dir,file_name) when file_name == nil do
+    ""
+  end
+
   def serve_file_contents(root_dir, file_name) do
     path = root_dir <> HTTPSanitizer.sanitize_path(file_name)
-#    path = root_dir <> file_name
     IO.puts("reading file #{path}")
     response = case File.read(path) do
       {:ok, contents} ->

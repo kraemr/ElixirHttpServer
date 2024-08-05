@@ -5,9 +5,6 @@ defmodule HTTPServer do
    require HTTPFileServer
    use GenServer
 
-   #@port 8081 #TODO: Make this something to pass in init or on app_start, and add option to specify listen_ip
-   #@root_dir "../public" #TODO: Make this something to pass in init or on app_start or in env
-
    def start_link(init_obj) do
       init_obj = Map.put(init_obj,:socket,nil)
       GenServer.start_link(__MODULE__, init_obj, name: __MODULE__)

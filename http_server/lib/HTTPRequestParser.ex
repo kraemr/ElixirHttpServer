@@ -10,7 +10,6 @@ defmodule HTTPRequestParser do
     val = Enum.at(kv,1)
     val = String.replace(val," ","")
     map = Map.put(header_map,key,val)
-    #IO.puts("key:#{key},value:#{val}")
     loop_header(header_list,map,n-1)
   end
 
@@ -20,18 +19,24 @@ defmodule HTTPRequestParser do
       key = Enum.at(kv,0)
       val = Enum.at(kv,1)
       val = String.replace(val," ","")
-      #IO.puts("key:#{key},value:#{val}")
       Map.put(header_map,key,val)
   end
 
 
-  #TODO: add error handling
   def extract_headers(request_data) do
-    arr = String.split(request_data,"\r\n\r\n")
-    raw_headers = Enum.at(arr,0)
-    header_list = String.split(raw_headers,"\r\n")
-    map = loop_header(header_list,%{},length(header_list)-1)
-    map
+    if request_data == nil do
+      nil
+    else
+      arr = String.split(request_data,"\r\n\r\n")
+	    raw_headers = Enum.at(arr,0)
+      header_list = String.split(raw_headers,"\r\n")
+	    if length(header_list) == 0 do
+	      nil
+	    else
+	      map = loop_header(header_list,%{},length(header_list)-1)
+	      map
+	    end
+    end
   end
 
   # Looks for \r\n followed directly by another \r\n
@@ -54,14 +59,28 @@ defmodule HTTPRequestParser do
     end
   end
 
+
+  # Tcp Connection but did not send http compliant request
+  # For example a Portscan would trigger this
+  def extract_path_and_params(request_data) when length(request_data) == 0 do
+    {:invalid_get,nil,nil}
+  end
+
+  def extract_path_and_params(request_data) when request_data == nil do
+    {:invalid_get,nil,nil}
+  end
+
   def extract_path_and_params(request_data) do
     arr = String.split(request_data, " ")
-    path_and_params = Enum.at(arr, 1)
-    splits = String.split(path_and_params, "?")
-    if length(splits) > 2 do
-      {:invalid_get,nil,nil}
-    else
-      {:ok, Enum.at(splits,0),Enum.at(splits,1)}
+    cond do
+      length(arr) != 3 -> {:invalid_get,nil,nil}
+      length(arr) == 3 ->
+        splits = String.split(Enum.at(arr, 1), "?");
+        if length(splits) == 1 do #return nil as params
+          {:ok, Enum.at(splits,0),nil}
+        else
+          {:ok, Enum.at(splits,0),Enum.at(splits,1)}
+        end
     end
   end
 
