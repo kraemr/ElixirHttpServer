@@ -27,9 +27,35 @@ defmodule TestApp do
       end
     end
 
+
+    # Currently if you want cookies, then you need to cram all of that into the headers map
+    test_json_api = fn(request) ->
+      Logger.info(request)
+      test = %{hello:"world"}
+      response_body_str = case JSON.encode(test) do
+        {:ok, response_data} -> response_data
+        {:error, _reason} -> nil
+      end
+      headers = %{
+        "Test" => "test",
+        "Content-type" => "application/json",
+      }
+
+      response = %{
+        "version" => "HTTP/1.1",
+        "response_code" => "200 OK",
+        "body" => response_body_str,
+        "headers" => headers,
+      }
+
+      HTTPResponse.create(response) #Return
+    end
+
     routes = %{
       "/api/test" => json_api, # register callback for route /api/test -> This function is used to generate responses for /api/test
+      "/api/new_test" => test_json_api,
     }
+
     HTTPServerSupervisor.start_link(routes,"../public",8082)
   end
 
