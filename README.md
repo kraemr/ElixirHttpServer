@@ -14,7 +14,6 @@ An example for using the API is in http_server/lib/test_app.ex
 #in root of repo
 cd http_server
 iex -S mix
-iex
 TestApp.start("","")
 ```
 
