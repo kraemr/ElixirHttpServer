@@ -10,16 +10,22 @@ currently you would need to include all HTTP\*.ex files in your own project as i
 I will try to make it usable by including it as a git dependency (soon).
 
 An example for using the API is in http_server/lib/test_app.ex
+```
+#in root of repo run
+iex -S mix
+iex
+TestApp.start("","")
+```
+
 
 # How does this work
-
 HTTPServer receives the raw tcp data, checks if it is valid and extracts Version,Path,Method,Headers,Body
 Then it checks if the path exists in the routes map specified by the user on startup.
 IF it exists then the callback function for that route is executed:
 
 ```elixir
     routes = %{
-      "/api/test" => json_api,
+      "/api/test" => json_api_function,
       # register callback for route /api/test -> This function is used to generate responses for /api/test
     }
 ```
