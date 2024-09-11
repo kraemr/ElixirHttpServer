@@ -31,7 +31,7 @@ defmodule TestApp do
     # Currently if you want cookies, then you need to cram all of that into the headers map
     test_json_api = fn(request) ->
       Logger.info(request)
-      test = %{hello:"world"}
+      test = %{hello: "world"}
       response_body_str = case JSON.encode(test) do
         {:ok, response_data} -> response_data
         {:error, _reason} -> nil

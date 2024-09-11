@@ -96,13 +96,30 @@ defmodule HTTPFileServer do
     end
   end
 
-  def serve_file_contents(root_dir,file_name) when file_name == nil do
+  def serve_file_contents(_root_dir,file_name) when file_name == nil do
     ""
+  end
+
+  def serve_file_contents(root_dir,file_name) when file_name == "/" do
+    new_filename = file_name <> "index.html"
+    path = root_dir <> HTTPSanitizer.sanitize_path(new_filename)
+    response = case File.read(path) do
+        {:ok, contents} ->
+          type = detect_content_type(new_filename)
+          if type == nil do #invalid content type or doesnt exist
+            HTTPResponse.create("HTTP/1.1","200 OK",contents,"text/plain")
+          else
+            HTTPResponse.create("HTTP/1.1","200 OK",contents,type)
+          end
+        {:error, :enoent} -> # File doesnt exist
+          HTTPResponse.create("HTTP/1.1","404 Not Found","Not Found","text/html")
+    end
+    response
   end
 
   def serve_file_contents(root_dir, file_name) do
     path = root_dir <> HTTPSanitizer.sanitize_path(file_name)
-    IO.puts("reading file #{path}")
+    IO.puts("reading file at #{path} filename: #{file_name}")
     response = case File.read(path) do
       {:ok, contents} ->
         type = detect_content_type(file_name)

@@ -1,6 +1,5 @@
 # Sanitizes things like Get Params, localhost/../../ ...
 defmodule HTTPSanitizer do
-
   def sanitize_path(path) when path == nil do
     nil
   end
