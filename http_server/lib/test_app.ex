@@ -32,10 +32,12 @@ defmodule TestApp do
     test_json_api = fn(request) ->
       Logger.info(request)
       test = %{hello: "world"}
+
       response_body_str = case JSON.encode(test) do
         {:ok, response_data} -> response_data
         {:error, _reason} -> nil
       end
+
       headers = %{
         "Test" => "test",
         "Content-type" => "application/json",
@@ -47,7 +49,6 @@ defmodule TestApp do
         "body" => response_body_str,
         "headers" => headers,
       }
-
       HTTPResponse.create(response) #Return
     end
 
@@ -56,7 +57,7 @@ defmodule TestApp do
       "/api/new_test" => test_json_api,
     }
 
-    HTTPServerSupervisor.start_link(routes,"../public",8082)
+    HTTPServerSupervisor.start_link(routes,"../public",8088)
   end
 
 end
