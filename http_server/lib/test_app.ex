@@ -44,7 +44,7 @@ defmodule TestApp do
       }
 
       response = %{
-        "version" => "HTTP/1.1",
+        "version" => "HTTP/1.0",
         "response_code" => "200 OK",
         "body" => response_body_str,
         "headers" => headers,
@@ -57,7 +57,7 @@ defmodule TestApp do
       "/api/new_test" => test_json_api,
     }
 
-    HTTPServerSupervisor.start_link(routes,"../public",8088)
+    HTTPServerSupervisor.start_link(routes,"../public",8089)
   end
 
 end

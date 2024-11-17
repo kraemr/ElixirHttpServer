@@ -11,7 +11,7 @@ defmodule HTTPServerSupervisor do
      children = [
         %{
           id: HTTPServer,
-          start: {HTTPServer, :start_link, [init_obj]},
+          start: {HTTPServer, :start, [init_obj]},
           restart: :permanent,
           shutdown: 5000,
           type: :worker,
